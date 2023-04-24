@@ -58,19 +58,6 @@ def crea_billes (nb,longueur,largeur,L=[]):
     else:
         R=crea_billes(nb,longueur,largeur,R)
         return R
-def est_une_bille(billes,point):
-    """
-    test si le point est une des billes
-    -----------
-    Entree :
-        billes la liste des billes
-    Sortie :
-        True si c'en est une False sinon
-    """
-    for i in billes :
-        if point==i:
-            return True
-    return False
 def deplacement_unitaire (billes,rayon):
     """
     Déplace d'une case
@@ -83,44 +70,20 @@ def deplacement_unitaire (billes,rayon):
     x=rayon[0]
     y=rayon[1]
     movx,movy=rayon[2]
-    if est_une_bille(billes,[x+movx,y+movy]): #cas d'bsorption
+    if appartient([x+movx,y+movy],billes): #cas d'bsorption
         return 0
     if movx==0: #cas de déviation 1
-        if est_une_bille(billes,[x+1,y+movy]):
+        if appartient([x+1,y+movy],billes):
             return [x,y,[-1,0]]
-        elif est_une_bille(billes,[x-1,y+movy]):
+        elif appartient([x-1,y+movy],billes):
             return [x,y,[1,0]]
     elif movy==0: #cas de déviation 2
-        if est_une_bille(billes,[x+movx,y+1]):
+        if appartient([x+movx,y+1],billes):
             return [x,y,[0,-1]]
-        elif est_une_bille(billes,[x+movx,y-1]):
+        elif appartient([x+movx,y-1],billes):
             return [x,y,[0,1]]
 
     return [x+movx,y+movy,[movx,movy]]  #cas de déplacement sans gène
-def traduction (longueur,largeur,entree):
-    """
-    Pas sur de garder cette fonction
-    Traduit une entree au format "sens,signe,valeur" en format [x,y,[1,0]]
-    ----------
-    exemple d'entree :
-        "x-4" -> entree sur l'axe x de sens opposé et de valeur 4
-    sortie :
-        [0,4,[1,0]]
-    """
-    if entree[0]=="y":
-        if entree[1]=="-":
-            val=int(entree[2:])
-            return [longueur-1,val,[-1,0]]
-        else :
-            val=int(entree[1:])
-            return [0,val,[1,0]]
-    else :
-        if entree[1]=="-":
-            val=int(entree[2:])
-            return [val,largeur-1,[0,-1]]
-        else :
-            val=int(entree[1:])
-            return [val,0,[0,1]]
 def deplacement (entree,billes,longueur,largeur):
     """
     Permet de rendre la sortie d'un rayon sachant l'entree
@@ -131,7 +94,6 @@ def deplacement (entree,billes,longueur,largeur):
         1 si reflexion en bord de boite ou demi tour et sortie a la meme case qu'entree
         0 si absorption
     """
-    #pos0=traduction(longueur,largeur,entree) #?
     pos0=entree
     pos=deplacement_unitaire(billes,pos0)
     if pos==0 :
@@ -144,7 +106,6 @@ def deplacement (entree,billes,longueur,largeur):
     if pos!=0 and pos[:2]==pos0[:2]: #Si la sortie vaut l'entree c'est une reflexion
         return 1
     return pos   #Sinon on retourne juste la sortie
-
 def appartient (elt,liste):
     """
     Teste une appartenance de elt dans la liste
@@ -153,25 +114,23 @@ def appartient (elt,liste):
         if elts==elt:
             return True
     return False
-
-def sauvegarde (liste1,liste2):
+def ajout (liste1,liste2):
     """
     Fonction permettant de socker liste2 dans liste1 sans impact (genre pb de mémoire et tt)
     """
-    liste1.append([])
+
     if liste2!=0:
+        liste1.append([])
         for elt in liste2:
             if type(elt)!=list :
                 liste1[-1].append(elt)
             else:
-                sauvegarde(liste1[-1],elt)
-
+                ajout(liste1[-1],elt)
 def billepossible(bille,dejaclear,longueur,largeur):
     """
     Renvoie True si la bille est possible
     """
-    return (not appartient(bille,dejaclear)) and (not(bille[0]==0 or bille[0]==longueur-1 or bille[1]==0 or bille[1]==largeur-1))
-
+    return (not appartient(bille,dejaclear)) and (not(bille[0]<=0 or bille[0]>=longueur-1 or bille[1]<=0 or bille[1]>=largeur-1))
 def calculespaces (billes,rayon,dejaclear,sortie,longueur,largeur,nbbilles,demitour=0):
     """
     ATTENTION si reflexion il faut mettre en valeur de "sortie" la position de la reflexion
@@ -179,15 +138,15 @@ def calculespaces (billes,rayon,dejaclear,sortie,longueur,largeur,nbbilles,demit
     Sortie :
         si un seul cas possible:
             0 si mauvaise sortie
-            les billes qui la permettent si bonne sortie
+            les billes qui la permettent si bonne sortie,1 car cas de base
         sinon :
-            liste des positions de billes qui rendent un jeu possible
+            liste des positions de billes qui rendent un jeu possible,0 car pas cas de base
     """
     #Cas de bases :Sortie ou utilisation de toutes les billes.
-    if rayon==0 or rayon[0]==0 or rayon[0]==longueur-1 or rayon[1]==0 or rayon[1]==largeur-1 : #Si on est sorti on regarde si c'est la bonne sortie (cas de base)
+    if rayon==0 or rayon[0]==0 or rayon[0]==longueur-1 or rayon[1]==0 or rayon[1]==largeur-1 : #Si on est sorti on regarde si c'est la bonne sortie
 
         if rayon==sortie :
-            return [billes,dejaclear]
+            return [[billes,dejaclear]]
         else :
             return 0
     if nbbilles == len(billes): #Si on a déjà fait une suppostion qui utilise toutes les billes, on continue jusqu'au bout et voit si on est bon.
@@ -200,10 +159,10 @@ def calculespaces (billes,rayon,dejaclear,sortie,longueur,largeur,nbbilles,demit
             rayon=deplacement_unitaire(billes,rayon)
 
         if rayon == sortie:
-            if sortie==0:
+            if sortie==0:   #si la sortie est une absorption on a enfait pas dejaclear ces 2 cases
                 dejaclear.pop(-1)
                 dejaclear.pop(-1)
-            return [billes,dejaclear]
+            return [[billes,dejaclear]]
         else:
             return 0
     #Récursif :
@@ -220,7 +179,8 @@ def calculespaces (billes,rayon,dejaclear,sortie,longueur,largeur,nbbilles,demit
 
     """
     if sortie==0 and billepossible([x+movx,y+movy],dejaclear,longueur,largeur):
-        sauvegarde(L,[billes+[[x+movx,y+movy]],dejaclear+[[x+movx,y+movy]]])
+        ajout(L,[billes+[[x+movx,y+movy]],dejaclear+[[x+movx,y+movy]]])
+
     if demitour==1:
         demitourpossible=1 #on compte ici si la bille gauche et droite sont possibles (et si il y a bien eu demitour)
     else:
@@ -228,12 +188,12 @@ def calculespaces (billes,rayon,dejaclear,sortie,longueur,largeur,nbbilles,demit
 
     if movx==0 :
         nouvbille=[x+1,y+movy]      #Si la nouvelle bille est à gauche
-        if billepossible(nouvbille,dejaclear,longueur,largeur): #il faut que le chemin qu'on crée soit possible: (on ne peut pas avoir une bille sur un chemin ou on est deja passé)
+        if billepossible(nouvbille,dejaclear,longueur,largeur): #il faut que la bille qu'on crée soit possible: (on ne peut pas avoir une bille sur un chemin ou on est deja passé)
             billes+=[nouvbille]
             cas=calculespaces(billes,deplacement_unitaire(billes,rayon),dejaclear+[[x+movx,y+movy],[x+1,y+movy],[x-1,y+movy]],sortie,longueur,largeur,nbbilles,demitour)
             if cas!=0:
                 for elt in cas:
-                    sauvegarde(L,elt)
+                    ajout(L,elt)
 
             billes.pop(-1)
             demitourpossible+=1
@@ -246,67 +206,99 @@ def calculespaces (billes,rayon,dejaclear,sortie,longueur,largeur,nbbilles,demit
             cas=calculespaces(billes,deplacement_unitaire(billes,rayon),dejaclear+[[x+movx,y+movy],[x+1,y+movy],[x-1,y+movy]],sortie,longueur,largeur,nbbilles,demitour) #Attention ici on a ajouté le cas de la bille gauche dans déjà fait car las cas où les 2 existent est deja fait
             if cas!=0:
                 for elt in cas:
-                    sauvegarde(L,elt)
+                    ajout(L,elt)
             billes.pop(-1)
             demitourpossible+=1
 
         cas=calculespaces(billes,deplacement_unitaire(billes,rayon),dejaclear+[[x+movx,y+movy],[x+1,y+movy],[x-1,y+movy]],sortie,longueur,largeur,nbbilles,demitour)
         if cas!=0:
-            for elt in cas:
-                sauvegarde(L,elt)
+                for elt in cas:
+                    ajout(L,elt)
+
         if demitourpossible==3:
             bille1=[x+1,y+movy]
             bille2=[x-1,y+movy]
             if billepossible(bille1,dejaclear,longueur,largeur) and billepossible(bille2,dejaclear,longueur,largeur)and len(billes)<nbbilles-1:
-                sauvegarde(L,[billes+[bille1,bille2],dejaclear+[[x,y+movy],bille1,bille2]])
+                ajout(L,[billes+[bille1,bille2],dejaclear+[[x,y+movy],bille1,bille2]])
 
     else : #movy=0
         nouvbille=[x+movx,y+1]      #Si la nouvelle bille est à gauche
         if billepossible(nouvbille,dejaclear,longueur,largeur): #il faut que le chemin qu'on crée soit possible: (on ne peut pas avoir une bille sur un chemin ou on est deja passé)
             billes+=[nouvbille]
             cas=calculespaces(billes,deplacement_unitaire(billes,rayon),dejaclear+[[x+movx,y+movy],[x+movx,y+1],[x+movx,y-1]],sortie,longueur,largeur,nbbilles,demitour)
+
             if cas!=0:
                 for elt in cas:
-                    sauvegarde(L,elt)
+                    ajout(L,elt)
             billes.pop(-1)
             demitourpossible+=1
+
         nouvbille=[x+movx,y-1]
         if billepossible(nouvbille,dejaclear,longueur,largeur): #il faut que le chemin qu'on crée soit possible: (on ne peut pas avoir une bille sur un chemin ou on est deja passé)
             billes+=[nouvbille]
             cas=calculespaces(billes,deplacement_unitaire(billes,rayon),dejaclear+[[x+movx,y+movy],[x+movx,y+1],[x+movx,y-1]],sortie,longueur,largeur,nbbilles,demitour) #Attention ici on a ajouté le cas de la bille gauche dans déjà fait car las cas où les 2 existent est deja fait
             if cas!=0:
                 for elt in cas:
-                    sauvegarde(L,elt)
+                    ajout(L,elt)
+
             billes.pop(-1)
             demitourpossible+=1
+
         cas=calculespaces(billes,deplacement_unitaire(billes,rayon),dejaclear+[[x+movx,y+movy],[x+movx,y+1],[x+movx,y-1]],sortie,longueur,largeur,nbbilles,demitour)
         if cas!=0:
-            for elt in cas:
-                sauvegarde(L,elt)
+                for elt in cas:
+                    ajout(L,elt)
+
         if demitourpossible==3 :
             bille1=[x+movx,y+1]
             bille2=[x+movx,y-1]
             if billepossible(bille1,dejaclear,longueur,largeur) and billepossible(bille2,dejaclear,longueur,largeur) and len(billes)<nbbilles-1:
-                sauvegarde(L,[billes+[bille1,bille2],dejaclear+[[x+movx,y],bille1,bille2]])
+                ajout(L,[billes+[bille1,bille2],dejaclear+[[x+movx,y],bille1,bille2]])
     if L==[]: #Si la liste est toujours vide cela veut dire que tous les cas sont impossibles.
         L=0
     return L
-def selection (univers):
+def selection (univers,liste_coups):
     """
     C'est cette fonction qui détermine ou tirer lorque l'on sait un univers
     """
     a=randint(1,4)
     n=len(univers)
     m=len(univers[0])
+    liste_entrees=[]
+    for i in liste_coups:
+        liste_entrees.append(i[0])
     if a==1:
-        return [0,randint(1,m-2),[1,0]]
+        test=[0,randint(1,m-2),[1,0]]
+        if appartient(test,liste_coups):
+            return selection(univers,liste_coups)
+        else:
+            return test
     if a==2:
-        return [n-1,randint(1,m-2),[-1,0]]
+        test= [n-1,randint(1,m-2),[-1,0]]
+        if appartient(test,liste_coups):
+            return selection(univers,liste_coups)
+        else:
+            return test
     if a==3:
-        return [randint(1,n-2),0,[0,1]]
-    if a==4:
-        return [randint(1,n-2),m-1,[0,-1]]
+        test= [randint(1,n-2),0,[0,1]]
+        if appartient(test,liste_coups):
+            return selection(univers,liste_coups)
+        else:
+            return test
 
+    if a==4:
+        test=[randint(1,n-2),m-1,[0,-1]]
+        if appartient(test,liste_coups):
+            return selection(univers,liste_coups)
+        else:
+            return test
+def supprimerlesdoubles(liste):
+    """
+    Supprime les doubles d'une liste
+    """
+    for i in range (len(liste)-1,-1,-1): #on traverse la liste à l'envers pour ne pas modifier la position des doubles en supprimant les éléments du début.
+        if appartient(liste[i],liste[:i]):
+            liste.pop(i)
 def BOB (nbbilles,longueur,largeur,billesréelles):
     """
     BOB est notre joueur qui calcule toutes les possibilités et fait une moyenne de tous les univers possibles pour placer une bille s'il y a une proba de 1 et tirer un rayon passant par la plus grosse valeur de probas
@@ -321,47 +313,159 @@ def BOB (nbbilles,longueur,largeur,billesréelles):
     moyenne=[[1/(longueur*largeur) for i in range (largeur)]for j in range (longueur)]
     liste_coups=[]
     liste_des_univers=[]
-    L=[]
     #coup initial:
-    entree=selection(moyenne)
-    x,y,[movx,movy]=entree
+    entree=selection(moyenne,liste_coups)
     sortie=deplacement(entree,billesréelles,longueur,largeur)
-    print(entree,sortie)
-    dejafait=[]  #Opération obligatoire on va appliquer calculespaces sur le rayon qui est deja entré dans la boite les cas de reflexion en bord de boite sont traités a part.
+
+    x,y,[movx,movy]=entree
+    ajout(liste_coups,[entree,sortie])
+    #print(liste_coups[-1])
+    depart=[]  #Opération obligatoire on va appliquer calculespaces sur le rayon qui est deja entré dans la boite les cas de reflexion en bord de boite sont traités a part.
     for i in range (-1,2):
         for j in  range (-1,2):
-            dejafait.append([x+i,y+j]) #on met trop de cases dans déja fait mais pas grave c'est des cases en dehors du terrain
+            depart.append([x+i,y+j]) #on met trop de cases dans déja fait mais pas grave c'est des cases en dehors du terrain
 
     if sortie==0:
-        liste_des_univers=calculespaces([],deplacement_unitaire([],entree),dejafait,sortie,longueur,largeur,nbbilles)
-        liste_des_univers.append([[deplacement_unitaire([],entree)[:2]],[deplacement_unitaire([],entree)[:2]]]) #cas à part si c'est la bille en tout premier qui fait bugger
+        cas=calculespaces([],deplacement_unitaire([],entree),depart,sortie,longueur,largeur,nbbilles)
+        if cas !=0:
+            for elt in cas:
+                ajout(liste_des_univers,elt)
+        ajout(liste_des_univers,[[[x+movx,y+movy]],[[x+movx,y+movy]]]) #cas à part si c'est la bille en tout premier qui fait bugger
 
     elif sortie==1:
-        liste_des_univers=calculespaces([],deplacement_unitaire([],entree),dejafait,[x,y,[-movx,-movy]],longueur,largeur,nbbilles,1)
-        if liste_des_univers==0:
-            liste_des_univers=[]
+        #cas de sortie=entree
+        cas=calculespaces([],deplacement_unitaire([],entree),depart,[x,y,[-movx,-movy]],longueur,largeur,nbbilles,1)
+        if cas !=0:
+            for elt in cas:
+                ajout(liste_des_univers,elt)
+        #Cas de reflexion en bord de boite
         comptage=0   #si une bille a gauche et une bille a droite sont possibles alors les 2 ensembre le sont aussi
-        for i in range(-1,3,2): #contrairement a dejafait on ne veut surtout pas compter de billes en dehors du plateau
+        for i in range(-1,3,2):
             for j in range (-1,3,2):
-                if 0<x+i<longueur-1 and 0<y+j<largeur-1 :
-                    liste_des_univers.append([[[x+i,y+j]],[[x+i,y+j],[x+movx,y+movy]]])
+                if 0<x+i<longueur-1 and 0<y+j<largeur-1 : #contrairement a depart on ne veut surtout pas compter de billes en dehors du plateau
+                    ajout(liste_des_univers,[[[x+i,y+j]],[[x+i,y+j],[x+movx,y+movy]]])
                     comptage+=1
-        if comptage==2:
-            liste_des_univers.append([[liste_des_univers[-1][0]+liste_des_univers[-2][0]],liste_des_univers[-1][1]+[liste_des_univers[-2][1][0]]])
-    else :
-        liste_des_univers=calculespaces([],deplacement_unitaire([],entree),dejafait,sortie,longueur,largeur,nbbilles)
-        BBBBBBOOOOOOOOOOOOOOOOBBBBBBBBBBBBBBBB
+        if comptage==2 and nbbilles>1:
+            ajout(liste_des_univers,[liste_des_univers[-1][0]+liste_des_univers[-2][0],liste_des_univers[-1][1]+[liste_des_univers[-2][1][0]]])
 
-    return liste_des_univers
+    else :
+        for elt in calculespaces([],deplacement_unitaire([],entree),depart,sortie,longueur,largeur,nbbilles):
+            ajout(liste_des_univers,elt)
+
+    #print(liste_des_univers)
+    #cas général
+    while (len (liste_des_univers)!=1 or len(liste_des_univers[0][0])!=nbbilles) and len(liste_coups)<2*(longueur+largeur-6):
+        entree=selection(moyenne,liste_coups)
+        """if appartient( [[0, 4, [1, 0]], [1, 6, [0, 1]]],liste_coups):
+            entree=selection(moyenne,liste_coups)
+        else:
+            entree=[0, 4, [1, 0]]"""
+        sortie=deplacement(entree,billesréelles,longueur,largeur)
+
+        x,y,[movx,movy]=entree
+        ajout(liste_coups,[entree,sortie])
+        #print("coup:",liste_coups[-1])
+
+
+        for cas_traite in range (len(liste_des_univers)-1,-1,-1):
+            #print(liste_des_univers)
+            #print(cas_traite)
+            billes,dejafait=liste_des_univers[cas_traite]
+
+            depart=[] #Les cases qui sont deja analysées par le départ
+            for i in range (-1,2):
+                for j in  range (-1,2):
+                    depart.append([x+i,y+j]) #on met trop de cases dans déja fait mais pas grave c'est des cases en dehors du terrain
+            supprimerlesdoubles(dejafait)
+            #print('ok1')
+
+
+            #Si il n'y a aucune des billes autour du départ (cela induirait une contradiction et un  cas impossible)
+            test0=False #Test si la sortie devrait etre 0
+            test1=False #Test si la sortie devrait etre 1
+            for i in range (-1,2):
+                for j in range (-1,2):
+                    if appartient([x+i,y+j],billes) and (i==0 or j==0):
+                        test0=True
+                    elif appartient([x+i,y+j],billes):
+                        test1=True
+
+            if test0 and sortie==0:
+                ajout(liste_des_univers,liste_des_univers[cas_traite])
+            if (not test0) and test1 and sortie==1:
+                ajout(liste_des_univers,liste_des_univers[cas_traite])
+            #Cas des sans problèmes au départ
+            if (not test0) and (not test1) and sortie==0:
+                cas=calculespaces(billes,deplacement_unitaire([],entree),dejafait+depart,sortie,longueur,largeur,nbbilles)
+                if cas !=0:
+                    for elt in cas:
+                        ajout(liste_des_univers,elt)
+                if appartient([x+movx,y+movy],billes):
+                    ajout(liste_des_univers,[billes,dejafait])
+                if billepossible([x+movx,y+movy],dejafait,longueur,largeur) and len(billes)<nbbilles:
+                    ajout(liste_des_univers,[billes+[[x+movx,y+movy]],dejafait+[[x+movx,y+movy]]]) #cas à part si c'est la bille en tout premier qui fait bugger
+
+            elif (not test0) and (not test1) and sortie==1:
+                #cas de sortie=entree
+
+                cas=calculespaces(billes,deplacement_unitaire([],entree),dejafait+depart,[x,y,[-movx,-movy]],longueur,largeur,nbbilles,1)
+                if cas !=0:
+                    for elt in cas:
+                        ajout(liste_des_univers,elt)
+                #Cas de reflexion en bord de boite
+                if len(billes)<nbbilles: #Si on peut en rajouter une nouvelle
+                    comptage1=0   #si une bille a gauche et une bille a droite sont possibles alors les 2 ensembre le sont aussi
+                    comptage2=0
+                    for i in range(-1,3,2):
+                        for j in range (-1,3,2):
+                            if billepossible([x+i,y+j],dejafait,longueur,largeur) : #contrairement a depart on ne veut surtout pas compter de billes en dehors du plateau
+                                ajout(liste_des_univers,[billes+[[x+i,y+j]],dejafait+[[x+movx,y+movy],[x+i,y+j]]])
+                                comptage1+=1
+                            if appartient([x+i,y+j],billes):
+                                ajout(liste_des_univers,[billes,dejafait+[[x+movx,y+movy]]])
+                                comptage2+=1
+                    if comptage1==2 and len(billes)<nbbilles-1:
+                        ajout(liste_des_univers,[billes+[liste_des_univers[-1][0][-1]]+[liste_des_univers[-2][0][-1]] , dejafait+[[x+movx,y+movy]]])
+                    if comptage2==2:
+                        ajout(liste_des_univers,[billes,dejafait+[[x+movx,y+movy]]])
+            elif (not test0) and (not test1) :
+                #print('ok2')
+
+
+                cas=calculespaces(billes,deplacement_unitaire([],entree),dejafait+depart,sortie,longueur,largeur,nbbilles)
+                #print('ok3')
+                if cas!=0:
+                    for elt in cas:
+                        ajout(liste_des_univers,elt)
+            #print(cas)
+
+            liste_des_univers.pop(cas_traite)
+        #print("fini",liste_des_univers)
+    if len(liste_coups)==2*(longueur+largeur-6):
+        return"stop"
+    return liste_des_univers[0][0]
 
 longueur=7
 largeur=7
 nbbilles=2
 tab=[[0 for i in range (longueur)]for j in range (largeur)]
 billes=crea_billes(nbbilles,longueur,largeur)
+#billes=[[5, 3], [2, 1]]
 for i in billes :
     tab[i[0]][i[1]]=1
+
 printt(tab)
-print("")
-print(BOB(nbbilles,longueur,largeur,billes))
-[[[[4, 3]], [[3, 4], [3, 5], [3, 6], [4, 4], [4, 5], [4, 6], [5, 4], [5, 5], [5, 6], [4, 3]]], [[[4, 2]], [[3, 4], [3, 5], [3, 6], [4, 4], [4, 5], [4, 6], [5, 4], [5, 5], [5, 6], [4, 3], [5, 3], [3, 3], [4, 2]]], [[[4, 1]], [[3, 4], [3, 5], [3, 6], [4, 4], [4, 5], [4, 6], [5, 4], [5, 5], [5, 6], [4, 3], [5, 3], [3, 3], [4, 2], [5, 2], [3, 2], [4, 1]]], [[[4, 4]], [[4, 4]]]]
+print(billes)
+a=BOB(nbbilles,longueur,largeur,billes)
+print(a)
+print(billes)
+printt(tab)
+compteur=0
+for i in range (10):
+    billes=crea_billes(nbbilles,longueur,largeur)
+
+    a=BOB(nbbilles,longueur,largeur,billes)
+    print('end of the game',billes,a)
+    if appartient(a[0],billes) and appartient(a[1],billes)and a[0]!=a[1]:
+        compteur+=1
+print(compteur)
