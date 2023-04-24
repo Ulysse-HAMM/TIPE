@@ -461,11 +461,13 @@ print(a)
 print(billes)
 printt(tab)
 compteur=0
-for i in range (10):
+nombredetests=10 ####### Modifie ici pour faire le nb de tests que tu veux
+for i in range (nombredetests):
     billes=crea_billes(nbbilles,longueur,largeur)
 
     a=BOB(nbbilles,longueur,largeur,billes)
     print('end of the game',billes,a)
     if appartient(a[0],billes) and appartient(a[1],billes)and a[0]!=a[1]:
         compteur+=1
-print(compteur)
+if compteur==nombredetests:
+    print("Youpi c'est gagné")
