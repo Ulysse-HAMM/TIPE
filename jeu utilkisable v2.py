@@ -547,8 +547,9 @@ def BOB (nbbilles,longueur,largeur,billesréelles,strategie):
         supprimerlesdoubles(liste_des_univers)
         #print("fini",liste_des_univers)
 
-
+    #Si le bon résultat n'a pas ete trouve a ce moment
     if len(liste_coups)==2*(longueur+largeur-4):
+        #Cas ou la solution est sure ET le nombre de billes manquantes est celui des cases non visitées
         if len (liste_des_univers)==1:
             comptage_des_deja_vus=0
             n=0
@@ -561,12 +562,37 @@ def BOB (nbbilles,longueur,largeur,billesréelles,strategie):
                     n+=1
             if comptage_des_deja_vus+len(liste_des_univers[0][0])==nbbilles:
                 return liste_des_univers[0][0]+sauvegarde ,len(liste_coups)
-        return 'stop',liste_des_univers,liste_coups
-    return liste_des_univers[0][0],len(liste_coups)
+            """else :
+                print ('probleme: unicite de la solution mais pas trouvée',liste_des_univers,liste_coups)
+                print(bloblablu)"""
+        #Cas ou l'on va etre obligé de faire une moyenne
+        print('cas a problemes \n',liste_des_univers,"\n",liste_coups)
+        moyenne =[[0 for i in range (longueur)]for j in range (largeur)]
+        nombre_de_billes_manquantes=0
+        nbcas=len(liste_des_univers)
+        sauvegarde=[]
+        for n in range (nbcas):
+            nombre_de_billes_manquantes=0
+            sauvegarde=[]
+            while len(liste_des_univers[n][1])<(longueur-2)*(largeur-2):
+                liste_des_univers[n][1].append([0,0])
+            print(liste_des_univers)
+            for i in range (largeur-2,0,-1):
+                for j in range (longueur-2,0,-1):
+                    print(i,j)
+                    if [i,j]!=liste_des_univers[n][1][(longueur-2)*i-j]:
+                        sauvegarde.append([i,j])
+                        nombre_de_billes_manquantes+=1
+            for i in range (nombre_de_billes_manquantes):
+                moyenne[sauvegarde[i][1]][sauvegarde[i][0]]+=1/nombre_de_billes_manquantes
 
-longueur=10
-largeur=10
-nbbilles=4
+
+        return moyenne , liste_coups
+    return liste_des_univers[0][0],liste_coups
+
+longueur=8
+largeur=8
+nbbilles=3
 
 tab=[[0 for i in range (longueur)]for j in range (largeur)]
 printt(tab)
@@ -574,12 +600,13 @@ printt(tab)
 
 
 compteur=0
-nombredetests=635376####### Modifie ici pour faire le nb de tests que tu veux
+nombredetests=1####### Modifie ici pour faire le nb de tests que tu veux
 for i in range (nombredetests):
     billes=crea_billes(nbbilles,longueur,largeur)
-    #billes=[[3, 4], [5, 3]]
+    billes=[[4, 1], [6, 6], [2, 1]]
+    print(billes)
     a,nbcoups=BOB(nbbilles,longueur,largeur,billes,selection_aleatoire)
-    print('end of the game',billes,a,nbcoups)
+    print('end of the game',a,nbcoups)
     test=True
     for j in range (nbbilles) :
         if not(appartient(a[j],billes)) or  appartient (a[j],a[:j]):
