@@ -565,7 +565,7 @@ def printt (tab):
 longueur=10
 largeur=10
 nbbilles=5
-tests=100
+tests=10
 tab=[[0 for i in range (longueur)]for j in range (largeur)]
 printt(tab)
 compteur=0
